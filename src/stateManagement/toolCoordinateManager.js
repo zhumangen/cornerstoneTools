@@ -1,27 +1,27 @@
 (function(cornerstoneTools) {
 
-    'use strict';
+  'use strict';
 
-    function toolCoordinateManager(){
-        var cooordsData = '';
+  function toolCoordinateManager(){
+    var cooordsData = '';
 
-        function setActiveToolCoords(eventData){
-            cooordsData = eventData.currentPoints.canvas;
-        }
-
-        function getActiveToolCoords(){
-            return cooordsData;
-        }
-
-        var toolCoords = {
-            setCoords: setActiveToolCoords,
-            getCoords: getActiveToolCoords
-        };
-
-        return toolCoords;
+    function setActiveToolCoords(eventData){
+      cooordsData = eventData.currentPoints.canvas;
     }
 
-    // module/private exports
-    cornerstoneTools.toolCoordinates = toolCoordinateManager();
+    function getActiveToolCoords(){
+      return cooordsData;
+    }
+
+    var toolCoords = {
+      setCoords: setActiveToolCoords,
+      getCoords: getActiveToolCoords
+    };
+
+    return toolCoords;
+  }
+
+  // module/private exports
+  cornerstoneTools.toolCoordinates = toolCoordinateManager();
 
 })(cornerstoneTools);
