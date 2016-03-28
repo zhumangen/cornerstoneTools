@@ -3,66 +3,50 @@
   "use strict";
   
   var width;
-  var height;
+  var height; 
   
   function getPixelData() {
-    //var start = new Date().getTime();
-
-    // TODO: Get rid of the object! This is slow.
-    // TODO: Use BW instead to save time
     
-    // If something was drawn, save it
-    if (brush.indexes.length != 0){  // TODO: Is this really important or maybe could it work without this???
-      var index = 0;
-      var radius = Math.round(brush.radius / brush.scale);
-      var PiHalf = 0.5 * Math.PI;
-      for (var i=0; i<brush.indexes.length; i++){ // TODO: Using the object.length call here is extrem slow
-        
-        // Draw the center
-        var arrayindex = Math.round(brush.indexes[i][1])*width*4 + Math.round(brush.indexes[i][0])*4;
-        overlayData.data[arrayindex+1] = 0;
-        overlayData.data[arrayindex+2] = 0;
-        
-        // Draw the circle
-        // Only calculate 1/4 of the circle and mirror it in both directions
-        for (var fill=0; fill<radius; fill++){ // TODO: Test if decreasing would be faster
-          var steps = 90*fill; // TODO: Test this with bigger images 
-          for (var j = 0; j < steps; j++) { // TODO: Test if decreasing would be faster
-            var phase = PiHalf * j / steps;
-            
-            var circleX = fill * Math.cos(phase);
-            var circleY = fill * Math.sin(phase);
+    var index = 0;
+    var radius = Math.round(brush.radius / brush.scale);
+    var PiHalf = 0.5 * Math.PI;
+    var brushLength = brush.indexes.length;
+    
+    var radiusSqr = radius*radius;
+    
+    for (var i=0; i<brush.indexes.length; i++){
+    
+      for (var circleY=0; circleY<radius; circleY++){
+        var maxX = Math.sqrt( radiusSqr - circleY*circleY );
+        for (var circleX=0; circleX<maxX; circleX++){
 
-            var arrayindex = Math.round(brush.indexes[i][1] + circleY)*1024 + Math.round(brush.indexes[i][0] + circleX)*4;
-            overlayData.data[arrayindex+1] = 0;
-            overlayData.data[arrayindex+2] = 0;
+          var indexX = brush.indexes[i][0];
+          var indexY = brush.indexes[i][1];
 
-            var arrayindex = Math.round(brush.indexes[i][1] + circleY)*1024 + Math.round(brush.indexes[i][0] - circleX)*4;
-            overlayData.data[arrayindex+1] = 0;
-            overlayData.data[arrayindex+2] = 0;
+          var arrayindex = Math.round(indexY + circleY)*1024 + Math.round(indexX + circleX)*4;
+          overlayData.data[arrayindex+1] = 0;
+          overlayData.data[arrayindex+2] = 0;
 
-            var arrayindex = Math.round(brush.indexes[i][1] - circleY)*1024 + Math.round(brush.indexes[i][0] + circleX)*4;
-            overlayData.data[arrayindex+1] = 0;
-            overlayData.data[arrayindex+2] = 0;
+          var arrayindex = Math.round(indexY + circleY)*1024 + Math.round(indexX - circleX)*4;
+          overlayData.data[arrayindex+1] = 0;
+          overlayData.data[arrayindex+2] = 0;
 
-            var arrayindex = Math.round(brush.indexes[i][1] - circleY)*1024 + Math.round(brush.indexes[i][0] - circleX)*4;
-            overlayData.data[arrayindex+1] = 0;
-            overlayData.data[arrayindex+2] = 0;
-          }
+          var arrayindex = Math.round(indexY - circleY)*1024 + Math.round(indexX + circleX)*4;
+          overlayData.data[arrayindex+1] = 0;
+          overlayData.data[arrayindex+2] = 0;
+
+          var arrayindex = Math.round(indexY - circleY)*1024 + Math.round(indexX - circleX)*4;
+          overlayData.data[arrayindex+1] = 0;
+          overlayData.data[arrayindex+2] = 0;
+
         }
       }
     }
     
     brush.indexes = [];
-    
-    //var end = new Date().getTime();
-    //var run = end - start;
-    //console.log('Rendering time: ' + run);
-    
-    var temp2 = overlayData.data; // TODO
-    return temp2;
+    return overlayData.data;
   }
-
+  
   function getOverlayImage(imageId) {
     var image = {
       imageId: imageId,
@@ -85,12 +69,9 @@
     };
     var deferred = $.Deferred();
     deferred.resolve(image);
-    var temp = getPixelData();
     return deferred;
   }
   
-  
-
   // register our imageLoader plugin with cornerstone
   cs.registerImageLoader('overlay', getOverlayImage);
 
