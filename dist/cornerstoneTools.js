@@ -1,4 +1,4 @@
-/*! cornerstoneTools - v0.7.8 - 2016-03-22 | (c) 2014 Chris Hafey | https://github.com/chafey/cornerstoneTools */
+/*! cornerstoneTools - v0.7.8 - 2016-03-28 | (c) 2014 Chris Hafey | https://github.com/chafey/cornerstoneTools */
 // Begin Source: src/header.js
 if (typeof cornerstone === 'undefined') {
   cornerstone = {};
@@ -6988,8 +6988,8 @@ if (typeof cornerstoneTools === 'undefined') {
     overlayCtx.beginPath();
     overlayCtx.lineWidth = 1 / viewportScale;
     overlayCtx.arc(pixelCoords.x, pixelCoords.y, radius / viewportScale, 0, 2 * Math.PI, true);
-    overlayCtx.strokeStyle = 'rgba(255,0,0,0.7)';
-    overlayCtx.fillStyle = 'rgba(255,0,0,0.1)';
+    overlayCtx.strokeStyle = 'rgba(255,255,0,0.7)';
+    overlayCtx.fillStyle = 'rgba(255,255,0,0.1)';
     overlayCtx.stroke();
     overlayCtx.fill();
 
@@ -7004,6 +7004,37 @@ if (typeof cornerstoneTools === 'undefined') {
       var viewport = cornerstone.getViewport(elementOverlay);
       cornerstone.displayImage(elementOverlay, image, viewport);
     });
+  }
+  
+  function speedTest(element, elementOverlay, overlayData, brush) {
+    console.log('Speed Test');
+    
+    $(document).ready( function() {
+    
+      var enabledOverlay = cornerstone.getEnabledElement(elementOverlay);
+      var overlayCtx = enabledOverlay.canvas.getContext('2d');
+      overlayCtx.globalAlpha = 0.5;
+      radius = 70;
+
+      var start = new Date().getTime();
+
+      for ( var y = 0; y< 2; y++) {
+        for ( var x = 100; x< 400; x++) {
+          var event = $.Event( 'mousedown', {
+            pageX: x,
+            pageY: 450 + 150 * y
+          });
+
+          drawPointer(event, overlayCtx, elementOverlay, enabledOverlay, brush);
+          updateTheImage(elementOverlay);
+        }
+      }
+
+      var end = new Date().getTime();
+      var time = end - start;
+      console.log('Execution time: ' + time);
+    });
+    
   }
 
   function enable(element, elementOverlay, overlayObject, brush) {
@@ -7024,6 +7055,7 @@ if (typeof cornerstoneTools === 'undefined') {
     // TODO 2: Alphavalue should only be one??? But then the loop would be more complicated
     // Create an invisible overlay image.
     // Note: as all channels including the alpha channel are 255, this image is completly transparent
+    // TODO 3: Use only BW image for faster calculation - Maybe only use the 
     var indexes = width * height * 4; // RGBA
     for (var i = 0; i< indexes; i++){
       overlayObject.data[i] = 255;
@@ -7085,11 +7117,205 @@ if (typeof cornerstoneTools === 'undefined') {
   cornerstoneTools.overlay = {
     enable: enable,
     setRadius: setRadius,
+    speedTest: speedTest,
   };
 
 })($, cornerstone, cornerstoneTools);
  
 // End Source; src/overlayTools/overlay.js
+
+// Begin Source: src/overlayTools/overlayRG.js
+(function($, cornerstone, cornerstoneTools) {
+
+  'use strict';
+
+  // This module is for creating segmentation overlays
+
+  var width;
+  var height;
+  var radius;
+  var threshold;
+  var mousedown = 0; // RECONSIDER IF THIS IS SENSELESS!!!
+  var overlayId = 'overlay://1';
+  
+  /*var pointer = [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,9],
+                 [1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],[1,9],
+                 [2,0],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,9],
+                 [3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7],[3,8],[3,9],
+                 [4,0],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],
+                 [5,0],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[5,7],[5,8],
+                 [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6],[7,7],
+                 [7,0],[7,1],[7,2],[7,3],[5,4],[7,5],[7,6],
+                 [8,0],[8,1],[8,2],[8,3],[8,4],[8,5],
+                 [9,0],[9,1],[9,2],[9,3]];*/
+  
+  function getGrayValues(enabledElement, x, y) {
+    if (enabledElement.image === undefined) {
+      throw 'RG: image has not been loaded yet';
+    }
+
+    var rows = enabledElement.image.rows;
+    var columns = enabledElement.image.columns;
+    var pixelData = enabledElement.image.getPixelData();
+    console.log('Rows: ' + rows + ' Columns: ' + columns + ' pixeldada length: ' + pixelData.length);
+    console.log('x: ' + x + ' y: ' + y); 
+    
+  }
+  
+  function setTrh(newThreshold) {
+    threshold = newThreshold;
+  }
+  
+  function setRadius(newRadius) {
+    radius = newRadius;
+  }
+
+  function getImageSize(enabledElement) {
+    if (enabledElement.viewport.rotation === 0 || enabledElement.viewport.rotation === 180) {
+      return {
+        width: enabledElement.image.width,
+        height: enabledElement.image.height
+      };
+    } else {
+      return {
+        width: enabledElement.image.height,
+        height: enabledElement.image.width
+      };
+    }
+  }
+  
+  function showPointer(event, overlayCtx, elementOverlay, enabledOverlay){
+    var viewportOverlay = cornerstone.getViewport(elementOverlay);           
+    var pixelCoords = cornerstone.pageToPixel(elementOverlay, event.pageX, event.pageY);
+    var viewportScale = viewportOverlay.scale;
+    cornerstone.setToPixelCoordinateSystem(enabledOverlay, overlayCtx);
+    overlayCtx.setLineDash([ 0.1 / viewportScale, 0.5 / viewportScale ]);
+    overlayCtx.beginPath();
+    overlayCtx.lineWidth = 1 / viewportScale;
+    overlayCtx.arc(pixelCoords.x, pixelCoords.y, radius / viewportScale, 0, 2 * Math.PI, true);
+    overlayCtx.strokeStyle = 'yellow';
+    overlayCtx.fillStyle = 'yellow';
+    overlayCtx.stroke();
+    overlayCtx.fill();
+  }
+
+  function drawPointer(event, overlayCtx, elementOverlay, enabledOverlay, brush){
+    var viewportOverlay = cornerstone.getViewport(elementOverlay);          
+    var pixelCoords = cornerstone.pageToPixel(elementOverlay, event.pageX, event.pageY);
+    var viewportScale = viewportOverlay.scale;
+    cornerstone.setToPixelCoordinateSystem(enabledOverlay, overlayCtx);
+    overlayCtx.setLineDash([ 0.1 / viewportScale, 0.5 / viewportScale ]);
+    overlayCtx.beginPath();
+    overlayCtx.lineWidth = 1 / viewportScale;
+    overlayCtx.arc(pixelCoords.x, pixelCoords.y, radius / viewportScale, 0, 2 * Math.PI, true);
+    overlayCtx.strokeStyle = 'rgba(255,0,0,0.7)';
+    overlayCtx.fillStyle = 'rgba(255,0,0,0.1)';
+    overlayCtx.stroke();
+    overlayCtx.fill();
+
+    var ppoint = [ pixelCoords.x, pixelCoords.y ];
+    brush.indexes.push(ppoint);
+    brush.radius = radius;
+    brush.scale = viewportScale;
+  }
+  
+  function updateTheImage(elementOverlay) {
+    return cornerstone.loadImage(overlayId).then(function(image) {
+      var viewport = cornerstone.getViewport(elementOverlay);
+      cornerstone.displayImage(elementOverlay, image, viewport);
+    });
+  }
+
+  function enable(element, elementOverlay, overlayObject, brush) {
+    
+    var enabledElement = cornerstone.getEnabledElement(element);
+    if (element === undefined || elementOverlay === undefined) {
+      throw 'getEnabledElement: parameter element must not be undefined';
+    }
+    
+    var synchronizer = new cornerstoneTools.Synchronizer('CornerstoneImageRendered', cornerstoneTools.panZoomSynchronizer);
+
+    var size = getImageSize(enabledElement);
+    width = size.width;
+    height = size.height;
+    
+    overlayObject.data = new Uint8ClampedArray(width * height * 4);
+
+    // TODO 1: Alpha value is inverted???
+    // TODO 2: Alphavalue should only be one??? But then the loop would be more complicated
+    // Create an invisible overlay image.
+    // Note: as all channels including the alpha channel are 255, this image is completly transparent
+    // TODO 3: Use only BW image for faster calculation - Maybe only use the 
+    var indexes = width * height * 4; // RGBA
+    for (var i = 0; i< indexes; i++){
+      overlayObject.data[i] = 255;
+    }
+
+    overlayObject.width = width;
+    overlayObject.height = height;
+        
+    cornerstone.enable(elementOverlay);
+    var enabledOverlay = cornerstone.getEnabledElement(elementOverlay);
+    var overlayCtx = enabledOverlay.canvas.getContext('2d');
+    overlayCtx.globalAlpha = 0.5;
+    
+    cornerstone.loadImage(overlayId).then(function(image) {
+      cornerstone.displayImage(elementOverlay, image);
+
+      cornerstoneTools.mouseInput.enable(elementOverlay);
+      cornerstoneTools.pan.activate(elementOverlay, 2);
+      cornerstoneTools.zoom.activate(elementOverlay, 4);
+
+      synchronizer.add(element);
+      synchronizer.add(elementOverlay);
+      
+      $(elementOverlay).mousemove(function(event) {
+        if (mousedown === 0) { // TODO: GET RID OF THIS IF !!!!
+          updateTheImage(elementOverlay);
+          showPointer(event, overlayCtx, elementOverlay, enabledOverlay);
+        }
+      });
+      
+      $(elementOverlay).mousedown(function(event) {
+        
+        getGrayValues(enabledElement, event.pageX, event.pageY);
+        
+        if (mousedown === 0) {
+          updateTheImage(elementOverlay);
+        }
+
+        mousedown = 1;
+        var mouseButton = event.which;
+        if (mouseButton === 1) {
+          drawPointer(event, overlayCtx, elementOverlay, enabledOverlay, brush);
+          $(document).mousemove(function(event) {
+            drawPointer(event, overlayCtx, elementOverlay, enabledOverlay, brush);
+          });
+        }
+        
+        $(document).mouseup(function() {
+          $(document).unbind('mousemove');
+          $(document).unbind('mouseup');
+          
+          mousedown = 0;
+          updateTheImage(elementOverlay);
+        });
+      });
+
+    });
+    
+  }
+
+  // Module exports
+  cornerstoneTools.overlayRG = {
+    enable: enable,
+    setRadius: setRadius,
+    setTrh: setTrh,
+  };
+
+})($, cornerstone, cornerstoneTools);
+ 
+// End Source; src/overlayTools/overlayRG.js
 
 // Begin Source: src/referenceLines/calculateReferenceLine.js
 (function(cornerstoneTools) {
