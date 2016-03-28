@@ -14,6 +14,13 @@
     
     var radiusSqr = radius*radius;
     
+    var rgb;
+    if ( brush.draw === 1) {
+      rgb = 0;
+    } else {
+      rgb = 255;
+    }
+    
     for (var i=0; i<brush.indexes.length; i++){
     
       for (var circleY=0; circleY<radius; circleY++){
@@ -24,20 +31,20 @@
           var indexY = brush.indexes[i][1];
 
           var arrayindex = Math.round(indexY + circleY)*1024 + Math.round(indexX + circleX)*4;
-          overlayData.data[arrayindex+1] = 0;
-          overlayData.data[arrayindex+2] = 0;
+          overlayData.data[arrayindex+1] = rgb;
+          overlayData.data[arrayindex+2] = rgb;
 
           var arrayindex = Math.round(indexY + circleY)*1024 + Math.round(indexX - circleX)*4;
-          overlayData.data[arrayindex+1] = 0;
-          overlayData.data[arrayindex+2] = 0;
+          overlayData.data[arrayindex+1] = rgb;
+          overlayData.data[arrayindex+2] = rgb;
 
           var arrayindex = Math.round(indexY - circleY)*1024 + Math.round(indexX + circleX)*4;
-          overlayData.data[arrayindex+1] = 0;
-          overlayData.data[arrayindex+2] = 0;
+          overlayData.data[arrayindex+1] = rgb;
+          overlayData.data[arrayindex+2] = rgb;
 
           var arrayindex = Math.round(indexY - circleY)*1024 + Math.round(indexX - circleX)*4;
-          overlayData.data[arrayindex+1] = 0;
-          overlayData.data[arrayindex+2] = 0;
+          overlayData.data[arrayindex+1] = rgb;
+          overlayData.data[arrayindex+2] = rgb;
 
         }
       }

@@ -42,6 +42,7 @@
     <div>
       <button id="interpolation" class="btn">Toggle Interpolation</button>
       <button id="move" class="btn">Move</button>
+      <button id="drawErase" class="btn">Erase</button>
       
       <div>
         Radius: <span id="valBox">10</span>px
@@ -72,7 +73,8 @@ is used by our example image loader-->
 <script src="../jquery.min.js"></script>
 
 <!-- include the cornerstone library -->
-<script src="../cornerstone.min.js"></script>
+<!--<script src="../cornerstone.min.js"></script>-->
+<script src="../../../cornerstone/dist/cornerstone.min.js"></script>
   
 <script src="../cornerstoneMath.min.js"></script>
 
@@ -88,7 +90,7 @@ is used by our example image loader-->
 <script>
   var radius = 10; // 10 as default value
   var overlayData = {data: [], width: undefined, height: undefined};
-  var brush = {indexes: [], radius: 0, scale: 0};
+  var brush = {indexes: [], radius: 0, scale: 0, draw: 1};
   
   var element = $('#dicomImage').get(0);
   var imageId = 'example://1';
@@ -136,7 +138,17 @@ is used by our example image loader-->
       }
     });
     
-    $('#radiusSlider').on('change', function(){
+    $('#drawErase').click(function (e) {
+      if (brush.draw == 0) {
+        brush.draw = 1;
+        $('#drawErase').text("Erase");
+      } else {
+        brush.draw = 0;
+        $('#drawErase').text("Draw");
+      }
+    });
+    
+    $('#radiusSlider').on('input', function(){
       var newRadius = $('#radiusSlider').val();
       $('#valBox').text(newRadius);
       cornerstoneTools.overlay.setRadius(newRadius);
