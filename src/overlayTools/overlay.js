@@ -37,8 +37,8 @@
     overlayCtx.beginPath();
     overlayCtx.lineWidth = 1 / viewportScale;
     overlayCtx.arc(pixelCoords.x, pixelCoords.y, radius / viewportScale, 0, 2 * Math.PI, true);
-    overlayCtx.strokeStyle = 'yellow';
-    overlayCtx.fillStyle = 'yellow';
+    overlayCtx.strokeStyle = 'green';
+    overlayCtx.fillStyle = 'green';
     overlayCtx.stroke();
     overlayCtx.fill();
   }
@@ -52,8 +52,8 @@
     overlayCtx.beginPath();
     overlayCtx.lineWidth = 1 / viewportScale;
     overlayCtx.arc(pixelCoords.x, pixelCoords.y, radius / viewportScale, 0, 2 * Math.PI, true);
-    overlayCtx.strokeStyle = 'rgba(255,255,0,0.7)';
-    overlayCtx.fillStyle = 'rgba(255,255,0,0.1)';
+    overlayCtx.strokeStyle = 'rgba(255,255,0,255)';
+    overlayCtx.fillStyle = 'rgba(255,255,0,255)';
     overlayCtx.stroke();
     overlayCtx.fill();
 
@@ -68,37 +68,6 @@
       var viewport = cornerstone.getViewport(elementOverlay);
       cornerstone.displayImage(elementOverlay, image, viewport);
     });
-  }
-  
-  function speedTest(element, elementOverlay, overlayData, brush) {
-    console.log('Speed Test');
-    
-    $(document).ready( function() {
-    
-      var enabledOverlay = cornerstone.getEnabledElement(elementOverlay);
-      var overlayCtx = enabledOverlay.canvas.getContext('2d');
-      overlayCtx.globalAlpha = 0.5;
-      radius = 70;
-
-      var start = new Date().getTime();
-
-      for ( var y = 0; y< 2; y++) {
-        for ( var x = 100; x< 400; x++) {
-          var event = $.Event( 'mousedown', {
-            pageX: x,
-            pageY: 450 + 150 * y
-          });
-
-          drawPointer(event, overlayCtx, elementOverlay, enabledOverlay, brush);
-          updateTheImage(elementOverlay);
-        }
-      }
-
-      var end = new Date().getTime();
-      var time = end - start;
-      console.log('Execution time: ' + time);
-    });
-    
   }
 
   function enable(element, elementOverlay, overlayObject, brush) {
@@ -115,11 +84,7 @@
     
     overlayObject.data = new Uint8ClampedArray(width * height * 4);
 
-    // TODO 1: Alpha value is inverted???
-    // TODO 2: Alphavalue should only be one??? But then the loop would be more complicated
-    // Create an invisible overlay image.
     // Note: as all channels including the alpha channel are 255, this image is completly transparent
-    // TODO 3: Use only BW image for faster calculation - Maybe only use the 
     var indexes = width * height * 4; // RGBA
     for (var i = 0; i< indexes; i++){
       overlayObject.data[i] = 255;
@@ -132,6 +97,7 @@
     var enabledOverlay = cornerstone.getEnabledElement(elementOverlay);
     var overlayCtx = enabledOverlay.canvas.getContext('2d');
     overlayCtx.globalAlpha = 0.5;
+    overlayCtx.globalCompositeOperation = 'xor';
     
     cornerstone.loadImage(overlayId).then(function(image) {
       cornerstone.displayImage(elementOverlay, image);
@@ -181,7 +147,6 @@
   cornerstoneTools.overlay = {
     enable: enable,
     setRadius: setRadius,
-    speedTest: speedTest,
   };
 
 })($, cornerstone, cornerstoneTools);
