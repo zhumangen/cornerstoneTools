@@ -20,49 +20,53 @@
     } 
   </style>
 </head>
-<body style="background-color: #d7d7d7">
+<body>
   <div class="container">
     <div class="page-header">
       <h1>
         Segmentation Example
       </h1>
       <p>
-        This page contains an example of the segmentation overlay tool
+        This page contains an example of the segmentation paintbrush tool
       </p>
       <a href="../index.html">Go back to the Examples page</a>
     </div>
-    
-    Controls:
-    <ul>
-      <li>Left click paint</li>
-      <li>Middle Mouse button drag - pan</li>
-      <li>Right click drag - zoom</li>
-    </ul>
-    
-    <div>
-      <button id="interpolation" class="btn">Toggle Interpolation</button>
-      <button id="move" class="btn">Move</button>
-      <button id="drawErase" class="btn">Erase</button>
-      
-      <div>
-        Radius: <span id="valBox">10</span>px
-        <input id="radiusSlider" type="range" min="5" max="20" value="10" steps="1" style="width: 200px"/>
-      </div>
-    </div>
 
-    <div style="width:512px;height:512px;position:relative;display:inline-block;"
-        oncontextmenu="return false"
-        class='cornerstone-enabled-image disable-selection noIbar'
-        unselectable='on'
-        onselectstart='return false;'
-        onmousedown='return false;'>
-      <div id="dicomImage"
-        style="width:512px;height:512px;top:0px;left:0px; position:absolute;
-               border: 1px blue solid;">
+    <div class="row">
+
+      <div class="col-xs-9">
+        <div style="width:512px;height:512px;position:relative;display:inline-block;"
+            oncontextmenu="return false"
+            class='cornerstone-enabled-image disable-selection noIbar'
+            unselectable='on'
+            onselectstart='return false;'
+            onmousedown='return false;'>
+          <div id="dicomImage"
+            style="width:512px;height:512px;top:0px;left:0px; position:absolute;">
+          </div>
+        </div>
       </div>
-      <div id="dicomOverlay"
-        style="width:512px;height:512px;top:0px;left:0px; position:absolute;
-               border: 1px red solid; display:inline;  cursor: none;">
+      
+      <div class="col-xs-3">
+        <h5>Controls:</h5>
+        <ul>
+          <li>Left click paint</li>
+          <li>Middle Mouse button drag - pan</li>
+          <li>Right click drag - zoom</li>
+        </ul>
+
+        <div class="row">
+          <button id="drawErase" class="btn btn-primary">Erase</button>
+        </div>
+        
+        <div class="row">
+          <label for="radiusSlider">Radius: <span id="valBox">10</span>px</label>
+          <input id="radiusSlider" type="range" min="5" max="20" value="10" steps="1" style="width: 200px"/>
+        </div>
+
+        <div class="row">
+          <button id="downloadSegFile" class="btn btn-link">Download Seg File</button>
+        </div>
       </div>
     </div>
   </div>
@@ -73,7 +77,7 @@ is used by our example image loader-->
 <script src="../jquery.min.js"></script>
 
 <!-- include the cornerstone library -->
-  <script src="../cornerstone.min.js"></script>
+  <script src="../cornerstone.js"></script>
 <!--<script src="../../../cornerstone/dist/cornerstone.min.js"></script>-->
   
 <script src="../cornerstoneMath.min.js"></script>
@@ -81,79 +85,57 @@ is used by our example image loader-->
 <!-- include the cornerstone tools library -->
 <script src="../../dist/cornerstoneTools.js"></script>
 
+<script src="../dicomParser.js"></script>
+<script src="../cornerstoneWADOImageLoader.js"></script>
+
 <!-- include special code for these examples which provides images -->
 <script src="../exampleImageLoader.js"></script>
-<script src="../overlayLoader.js"></script>
-
-<script src="../dialogPolyfill.js"></script>
 
 <script>
   var radius = 10; // 10 as default value
-  var overlayData = {data: [], width: undefined, height: undefined};
-  var brush = {indexes: [], radius: 0, scale: 0, draw: 1};
+  var brush = {
+    indexes: [],
+    radius: 0,
+    scale: 0,
+    draw: 1
+  };
   
   var element = $('#dicomImage').get(0);
   var imageId = 'example://1';
-  
-  var overlayElement = $('#dicomOverlay').get(0);
-  var move = 0;
+  //var imageId = 'dicomweb:http://cornerstonetech.org/images/ClearCanvas/DXStudy/1.2.840.113619.2.67.2158294438.16324010109084338.243.dcm';
   
   // image enable the dicomImage element
   cornerstone.enable(element);
   
   cornerstone.loadImage(imageId).then(function(image) {
-    cornerstone.displayImage(element, image);
+    cornerstone.addLayer(element, image);
     
     cornerstoneTools.mouseInput.enable(element);
     cornerstoneTools.pan.activate(element, 2);
     cornerstoneTools.zoom.activate(element, 4);
     
-    cornerstone.enable(overlayElement);
-    cornerstoneTools.mouseInput.enable(overlayElement);    
-    cornerstoneTools.overlay.enable(element, overlayElement, overlayData, brush);
-    cornerstoneTools.overlay.setRadius(radius);    
-    //cornerstoneTools.simpleBrush.activate(element,1,); // TODO MAYBE MAKE AN EXTRA TOOL
+    cornerstoneTools.overlay.activate(element, 1, brush);
+    cornerstoneTools.overlay.setRadius(radius);      
+  });
 
-    $('#interpolation').click(function (e) {
-      var viewport = cornerstone.getViewport(element);
-      var viewportOverlay = cornerstone.getViewport(overlayElement);
-      if (viewport.pixelReplication === true) {
-        viewport.pixelReplication = false;
-        viewportOverlay.pixelReplication = false;
-      } else {
-        viewport.pixelReplication = true;
-        viewportOverlay.pixelReplication = true;
-      }
-      cornerstone.setViewport(element, viewport);
-      cornerstone.setViewport(overlayElement, viewportOverlay);
-    });
+  $('#drawErase').click(function (e) {
+    if (brush.draw == 0) {
+      brush.draw = 1;
+      $('#drawErase').text("Erase");
+    } else {
+      brush.draw = 0;
+      $('#drawErase').text("Draw");
+    }
+  });
+  
+  $('#radiusSlider').on('input', function(){
+    var newRadius = $('#radiusSlider').val();
+    $('#valBox').text(newRadius);
+    cornerstoneTools.overlay.setRadius(newRadius);
+  });
 
-    $('#move').click(function (e) {
-      if (move == 0) {
-        $(overlayElement).css("left", "550px");
-        move = 1;
-      } else {
-        $(overlayElement).css("left", "0px");
-        move = 0;
-      }
-    });
-    
-    $('#drawErase').click(function (e) {
-      if (brush.draw == 0) {
-        brush.draw = 1;
-        $('#drawErase').text("Erase");
-      } else {
-        brush.draw = 0;
-        $('#drawErase').text("Draw");
-      }
-    });
-    
-    $('#radiusSlider').on('input', function(){
-      var newRadius = $('#radiusSlider').val();
-      $('#valBox').text(newRadius);
-      cornerstoneTools.overlay.setRadius(newRadius);
-    });
-    
+  $('#downloadSegFile').click(function (e) {
+    //var bitArray = cornerstoneTools.overlay.getBitArray(element);
   });
   
 </script>

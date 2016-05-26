@@ -1,10 +1,10 @@
 if (typeof cornerstone === 'undefined') {
-  cornerstone = {};
+    cornerstone = {};
 }
 
 if (typeof cornerstoneTools === 'undefined') {
-  cornerstoneTools = {
-    referenceLines: {},
-    orientation: {}
-  };
+    cornerstoneTools = {
+        referenceLines: {},
+        orientation: {}
+    };
 }

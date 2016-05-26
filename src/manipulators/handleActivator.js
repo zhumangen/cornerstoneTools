@@ -1,44 +1,44 @@
 (function($, cornerstone, cornerstoneMath, cornerstoneTools) {
 
-  'use strict';
+    'use strict';
 
-  function getActiveHandle(handles) {
-    var activeHandle;
+    function getActiveHandle(handles) {
+        var activeHandle;
 
-    Object.keys(handles).forEach(function(name) {
-      var handle = handles[name];
-      if (handle.active === true) {
-        activeHandle = handle;
-        return;
-      }
-    });
+        Object.keys(handles).forEach(function(name) {
+            var handle = handles[name];
+            if (handle.active === true) {
+                activeHandle = handle;
+                return;
+            }
+        });
 
-    return activeHandle;
-  }
-
-  function handleActivator(element, handles, canvasPoint, distanceThreshold) {
-    if (!distanceThreshold) {
-      distanceThreshold = 36;
+        return activeHandle;
     }
 
-    var activeHandle = getActiveHandle(handles);
-    var nearbyHandle = cornerstoneTools.getHandleNearImagePoint(element, handles, canvasPoint, distanceThreshold);
-    if (activeHandle !== nearbyHandle) {
-      if (nearbyHandle !== undefined) {
-        nearbyHandle.active = true;
-      }
+    function handleActivator(element, handles, canvasPoint, distanceThreshold) {
+        if (!distanceThreshold) {
+            distanceThreshold = 36;
+        }
 
-      if (activeHandle !== undefined) {
-        activeHandle.active = false;
-      }
+        var activeHandle = getActiveHandle(handles);
+        var nearbyHandle = cornerstoneTools.getHandleNearImagePoint(element, handles, canvasPoint, distanceThreshold);
+        if (activeHandle !== nearbyHandle) {
+            if (nearbyHandle !== undefined) {
+                nearbyHandle.active = true;
+            }
 
-      return true;
+            if (activeHandle !== undefined) {
+                activeHandle.active = false;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
-    return false;
-  }
-
-  // module/private exports
-  cornerstoneTools.handleActivator = handleActivator;
+    // module/private exports
+    cornerstoneTools.handleActivator = handleActivator;
 
 })($, cornerstone, cornerstoneMath, cornerstoneTools);

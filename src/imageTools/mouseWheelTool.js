@@ -1,23 +1,23 @@
 (function($, cornerstone, cornerstoneTools) {
 
-  'use strict';
+    'use strict';
 
-  function mouseWheelTool(mouseWheelCallback) {
-    var toolInterface = {
-      activate: function(element) {
-        $(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);
-        var eventData = {
+    function mouseWheelTool(mouseWheelCallback) {
+        var toolInterface = {
+            activate: function(element) {
+                $(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);
+                var eventData = {
+                };
+                $(element).on('CornerstoneToolsMouseWheel', eventData, mouseWheelCallback);
+            },
+            disable: function(element) {$(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);},
+            enable: function(element) {$(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);},
+            deactivate: function(element) {$(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);}
         };
-        $(element).on('CornerstoneToolsMouseWheel', eventData, mouseWheelCallback);
-      },
-      disable: function(element) {$(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);},
-      enable: function(element) {$(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);},
-      deactivate: function(element) {$(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);}
-    };
-    return toolInterface;
-  }
+        return toolInterface;
+    }
 
-  // module exports
-  cornerstoneTools.mouseWheelTool = mouseWheelTool;
+    // module exports
+    cornerstoneTools.mouseWheelTool = mouseWheelTool;
 
 })($, cornerstone, cornerstoneTools);

@@ -1,27 +1,27 @@
 (function(cornerstoneTools) {
 
-  'use strict';
+    'use strict';
 
-  var keys = {
-    UP: 38,
-    DOWN: 40
-  };
+    var keys = {
+        UP: 38,
+        DOWN: 40
+    };
 
-  function keyDownCallback(e, eventData) {
-    var keyCode = eventData.keyCode;
-    if (keyCode !== keys.UP && keyCode !== keys.DOWN) {
-      return;
+    function keyDownCallback(e, eventData) {
+        var keyCode = eventData.keyCode;
+        if (keyCode !== keys.UP && keyCode !== keys.DOWN) {
+            return;
+        }
+
+        var images = 1;
+        if (keyCode === keys.DOWN) {
+            images = -1;
+        }
+
+        cornerstoneTools.scroll(eventData.element, images);
     }
 
-    var images = 1;
-    if (keyCode === keys.DOWN) {
-      images = -1;
-    }
-
-    cornerstoneTools.scroll(eventData.element, images);
-  }
-
-  // module/private exports
-  cornerstoneTools.stackScrollKeyboard = cornerstoneTools.keyboardTool(keyDownCallback);
+    // module/private exports
+    cornerstoneTools.stackScrollKeyboard = cornerstoneTools.keyboardTool(keyDownCallback);
 
 })(cornerstoneTools);

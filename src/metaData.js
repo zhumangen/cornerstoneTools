@@ -1,42 +1,42 @@
 (function($, cornerstone, cornerstoneTools) {
 
-  'use strict';
+    'use strict';
 
-  // this module defines a way for tools to access various metadata about an imageId.  This layer of abstraction exists
-  // so metadata can be provided to the tools in different ways (e.g. by parsing DICOM P10 or by a WADO-RS document)
-  // NOTE: We may want to push this function down into the cornerstone core library, not sure yet...
+    // this module defines a way for tools to access various metadata about an imageId.  This layer of abstraction exists
+    // so metadata can be provided to the tools in different ways (e.g. by parsing DICOM P10 or by a WADO-RS document)
+    // NOTE: We may want to push this function down into the cornerstone core library, not sure yet...
 
-  var providers = [];
+    var providers = [];
 
-  function addProvider( provider) {
-    providers.push(provider);
-  }
-
-  function removeProvider( provider) {
-    var index = providers.indexOf(provider);
-    if (index === -1) {
-      return;
+    function addProvider( provider) {
+        providers.push(provider);
     }
 
-    providers.splice(index, 1);
-  }
+    function removeProvider( provider) {
+        var index = providers.indexOf(provider);
+        if (index === -1) {
+            return;
+        }
 
-  function getMetaData(type, imageId) {
-    var result;
-    $.each(providers, function(index, provider) {
-      result = provider(type, imageId);
-      if (result !== undefined) {
-        return true;
-      }
-    });
-    return result;
-  }
+        providers.splice(index, 1);
+    }
 
-  // module/private exports
-  cornerstoneTools.metaData = {
-    addProvider: addProvider,
-    removeProvider: removeProvider,
-    get: getMetaData
-  };
+    function getMetaData(type, imageId) {
+        var result;
+        $.each(providers, function(index, provider) {
+            result = provider(type, imageId);
+            if (result !== undefined) {
+                return true;
+            }
+        });
+        return result;
+    }
+
+    // module/private exports
+    cornerstoneTools.metaData = {
+        addProvider: addProvider,
+        removeProvider: removeProvider,
+        get: getMetaData
+    };
 
 })($, cornerstone, cornerstoneTools);
