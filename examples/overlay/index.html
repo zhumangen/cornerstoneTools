@@ -61,7 +61,7 @@
         
         <div class="row">
           <label for="radiusSlider">Radius: <span id="valBox">10</span>px</label>
-          <input id="radiusSlider" type="range" min="5" max="20" value="10" steps="1" style="width: 200px"/>
+          <input id="radiusSlider" type="range" min="5" max="200" value="10" steps="1" style="width: 200px"/>
         </div>
 
         <div class="row">
@@ -92,18 +92,16 @@ is used by our example image loader-->
 <script src="../exampleImageLoader.js"></script>
 
 <script>
-  var radius = 10; // 10 as default value
-  var brush = {
-    indexes: [],
-    radius: 0,
-    scale: 0,
-    draw: 1
-  };
+  var radius = 10;
   
   var element = $('#dicomImage').get(0);
   var imageId = 'example://1';
   //var imageId = 'dicomweb:http://cornerstonetech.org/images/ClearCanvas/DXStudy/1.2.840.113619.2.67.2158294438.16324010109084338.243.dcm';
-  
+
+  var configuration = cornerstoneTools.overlay.getConfiguration();
+  configuration.radius = radius;
+  cornerstoneTools.overlay.setConfiguration(configuration);
+
   // image enable the dicomImage element
   cornerstone.enable(element);
   
@@ -114,24 +112,26 @@ is used by our example image loader-->
     cornerstoneTools.pan.activate(element, 2);
     cornerstoneTools.zoom.activate(element, 4);
     
-    cornerstoneTools.overlay.activate(element, 1, brush);
-    cornerstoneTools.overlay.setRadius(radius);      
+    cornerstoneTools.overlay.activate(element, 1);     
   });
 
   $('#drawErase').click(function (e) {
-    if (brush.draw == 0) {
-      brush.draw = 1;
+    var configuration = cornerstoneTools.overlay.getConfiguration();
+    if (configuration.draw == 0) {
+      configuration.draw = 1;
       $('#drawErase').text("Erase");
     } else {
-      brush.draw = 0;
+      configuration.draw = 0;
       $('#drawErase').text("Draw");
     }
+    cornerstoneTools.overlay.setConfiguration(configuration);
   });
   
   $('#radiusSlider').on('input', function(){
-    var newRadius = $('#radiusSlider').val();
-    $('#valBox').text(newRadius);
-    cornerstoneTools.overlay.setRadius(newRadius);
+    var radius = $('#radiusSlider').val();
+    $('#valBox').text(radius);
+    configuration.radius = radius;
+    cornerstoneTools.overlay.setConfiguration(configuration);
   });
 
   $('#downloadSegFile').click(function (e) {
