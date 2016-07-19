@@ -2,23 +2,36 @@ export default function (mouseDownCallback) {
   let configuration = {};
 
   const toolInterface = {
-    activate (element, mouseButtonMask, options) {
-      $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
-      const eventData = {
-        mouseButtonMask,
-        options
-      };
+    activate: function(element, mouseButtonMask, options) {
+        $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+        var eventData = {
+            mouseButtonMask: mouseButtonMask,
+            options: options
+        };
+        $(element).on('CornerstoneToolsMouseDownActivate', eventData, mouseDownCallback);
 
-      $(element).on('CornerstoneToolsMouseDownActivate', eventData, mouseDownCallback);
+        if (mouseMoveCallback) {
+            $(element).off('CornerstoneToolsMouseMove', mouseMoveCallback);
+            $(element).on('CornerstoneToolsMouseMove', mouseMoveCallback);
+        }
     },
-    disable (element) {
-      $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+    disable: function(element) {
+        $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+        if (mouseMoveCallback) {
+            $(element).off('CornerstoneToolsMouseMove', mouseMoveCallback);
+        }
     },
-    enable (element) {
-      $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+    enable: function(element) {
+        $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+        if (mouseMoveCallback) {
+            $(element).off('CornerstoneToolsMouseMove', mouseMoveCallback);
+        }
     },
-    deactivate (element) {
-      $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+    deactivate: function(element) {
+        $(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);
+        if (mouseMoveCallback) {
+            $(element).off('CornerstoneToolsMouseMove', mouseMoveCallback);
+        }
     },
     getConfiguration () {
       return configuration;
@@ -27,7 +40,6 @@ export default function (mouseDownCallback) {
       configuration = config;
     }
   };
-
 
   return toolInterface;
 }
