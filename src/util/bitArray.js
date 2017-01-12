@@ -1,39 +1,33 @@
-(function($, cornerstone, cornerstoneTools) {
+/* eslint no-bitwise: 0 */
+export function getBytesForBinaryFrame (numPixels) {
+      // Check whether the 1-bit pixels exactly fit into bytes
+  const remainder = numPixels % 8;
+      // Number of bytes that work on an exact fit
+  let bytesRequired = Math.floor(numPixels / 8);
 
-    'use strict';
+      // Add one byte if we have a remainder
+  if (remainder > 0) {
+    bytesRequired++;
+  }
 
-    function getBytesForBinaryFrame(numPixels) {
-        // check whether the 1-bit pixels exactly fit into bytes
-        var remainder = numPixels % 8;
-        // number of bytes that work on an exact fit
-        var bytesRequired = Math.floor(numPixels / 8);
+  return bytesRequired;
+}
 
-        // add one byte if we have a remainder
-        if (remainder > 0) {
-            bytesRequired++;
-        }
+export function packBitArray (pixelData) {
+  const numPixels = pixelData.length;
+  const length = getBytesForBinaryFrame(numPixels);
+  const bitPixelData = new Uint8Array(length);
 
-        return bytesRequired;
-    }
+  let bytePos = 0;
 
-    function packBitArray(pixelData) {
-        var numPixels = pixelData.length;
-        var length = getBytesForBinaryFrame(numPixels);
-        var bitPixelData = new Uint8Array(length);
+  for (let count = 0; count < numPixels; count++) {
+          // Compute byte position
+    bytePos = Math.floor(count / 8);
 
-        var bytePos = 0;
-        for (var count = 0; count < numPixels; count++) {
-            // Compute byte position
-            bytePos = Math.floor(count / 8);
+    const pixValue = (bitPixelData[count] !== 0);
 
-            var pixValue = (bitPixelData[count] !== 0);
-            bitPixelData[bytePos] = bitPixelData[bytePos] | pixValue << (count % 8);
-        }
+    bitPixelData[bytePos] |= pixValue << (count % 8);
+  }
 
-        return pixelData;
-    }
-
-    cornerstoneTools.packBitArray = packBitArray;
-    cornerstoneTools.getBytesForBinaryFrame = getBytesForBinaryFrame;
-
-})($, cornerstone, cornerstoneTools);
+  return pixelData;
+}

@@ -1,108 +1,102 @@
-(function(cornerstone, cornerstoneTools) {
+import * as cornerstone from 'cornerstone-core';
 
-    'use strict';
+import isInteger from '../util/isInteger';
+import getDistanceBetweenImagePositions from './getDistanceBetweenImagePositions';
 
-    var distances = {};
+function findClosestImage (imageIds, targetImageId) {
+  let closestImageId;
+  let minDistance = Infinity;
 
-    function getImagePositionPatient(imageId) {
-        var imagePlane = cornerstoneTools.metaData.get('imagePlane', imageId);
-        if (!imagePlane) {
-            throw new Error('getImagePosition: Image plane is not available for imageId: ' + imageId);
+  // Find the closest image based on the distance between the
+  imageIds.forEach((imageId) => {
+    const distance = getDistanceBetweenImagePositions(imageId, targetImageId);
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestImageId = imageId;
+    }
+  });
+
+  return closestImageId;
+}
+
+/**
+* Creates a FusionRenderer
+*
+* @param stackOptions
+*/
+export default class FusionRenderer {
+
+  // TODO: Create a base Renderer class and extend from it for the FusionRenderer
+  constructor (stackOptions) {
+    this.stackOptions = stackOptions;
+    this.currentImageIdIndex = 0;
+    this.preventCache = false;
+    this.layerIds = [];
+  }
+
+  render (element, stack) {
+    const imageObjects = stack.imageObjects;
+
+    // Move this to base Renderer class
+    if (!isInteger(this.currentImageIdIndex)) {
+      throw new Error('FusionRenderer: render - Image ID Index is not an integer');
+    }
+
+    // TODO: Figure out what to do with LoadHandlers in this scenario...
+
+    // For the base layer, go to the currentImageIdIndex
+    const baseImageObject = imageObjects[0];
+    const currentImage = baseImageObject.images[this.currentImageIdIndex];
+    const currentImageId = currentImage.imageId;
+
+    cornerstone.loadAndCacheImage(currentImageId).then((image) => {
+      // TODO: Maybe make an Update Or Add layer function?
+      if (this.layerIds && this.layerIds[0]) {
+        const currentLayerId = this.layerIds[0];
+        const layer = cornerstone.getLayers(element, currentLayerId);
+
+        layer.image = image;
+      } else {
+        const layerId = cornerstone.addLayer(element, image);
+
+        this.layerIds.push(layerId);
+      }
+
+      cornerstone.updateImage(element);
+    });
+
+    // Splice out the first image
+    const overlayImageObjects = imageObjects.slice(1, imageObjects.length);
+
+    // Loop through the remaining 'overlay' image objects
+    overlayImageObjects.forEach(function (imgObj, overlayLayerIndex) {
+      const imageIds = imgObj.images.map(function (image) {
+        return image.imageId;
+      });
+
+      const imageId = findClosestImage(imageIds, currentImageId);
+
+      if (!imageId) {
+        throw new Error('FusionRenderer: findClosestImage did not return an imageId');
+      }
+
+      cornerstone.loadAndCacheImage(imageId).then((image) => {
+        const layerIndex = overlayLayerIndex + 1;
+
+        if (this.layerIds && this.layerIds[layerIndex]) {
+          const currentLayerId = this.layerIds[layerIndex];
+          const layer = cornerstone.getLayers(element, currentLayerId);
+
+          layer.image = image;
+        } else {
+          const layerId = cornerstone.addLayer(element, image);
+
+          this.layerIds.push(layerId);
         }
 
-        if (!imagePlane.imagePositionPatient) {
-            throw new Error('getImagePosition: Image position patient is not available for imageId: ' + imageId);
-        }
-
-        return imagePlane.imagePositionPatient;
-    }
-
-    function getDistanceBetween(imageId1, imageId2) {
-        // Check if we have already calculated this distance
-
-        // TODO: There is probably a smarter way to store the results of this computation?
-        // Maybe a hash of the combined image ids?
-        if (distances[imageId1] && distances[imageId1].hasOwnProperty(imageId2)) {
-            return distances[imageId1][imageId2];
-        } else if (distances[imageId2] && distances[imageId2].hasOwnProperty(imageId1)) {
-            return distances[imageId2][imageId1];
-        }
-
-        // If the distance between these two images is not already calculated, calculate it
-        var imagePosition1 = getImagePositionPatient(imageId1);
-        var imagePosition2 = getImagePositionPatient(imageId2);
-        var distance = imagePosition1.distanceTo(imagePosition2);
-
-        // Store the calculated data in the cache
-        distances[imageId1] = {};
-        distances[imageId1][imageId2] = distance;
-
-        // Return the distance
-        return distance;
-    }
-
-    function findClosestImage(imageIds, targetImageId) {
-        var closestImageId;
-        var minDistance = Infinity;
-
-        // Find the closest image based on the distance between the
-        imageIds.forEach(function(imageId) {
-            var distance = getDistanceBetween(imageId, targetImageId);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestImageId = imageId;
-            }
-        });
-
-        return closestImageId;
-    }
-
-    /**
-     * Creates a FusionRenderer
-     *
-     * @param stackOptions
-     */
-    function FusionRenderer(stackOptions) {
-        this.stackOptions = stackOptions;
-
-        this.render = function(element, imageObjects) {
-            console.log('FusionRenderer render');
-            console.log(this.stackOptions);
-            console.log(element);
-
-            var currentImageIdIndex = 80;
-            // For the base layer, go to the currentImageIdIndex
-            var baseImageObject = imageObjects[0];
-            var currentImage = baseImageObject.images[currentImageIdIndex];
-            var currentImageId = currentImage.imageId;
-            cornerstone.loadAndCacheImage(currentImageId).then(function(image) {
-                cornerstone.addLayer(element, image);
-                cornerstone.updateImage(element);
-            });
-
-            // Splice out the first image
-            imageObjects.splice(0, 1);
-
-            // Loop through the remaining 'overlay' image objects
-            imageObjects.forEach(function(imgObj) {
-                var imageIds = imgObj.images.map(function(image) {
-                    return image.imageId;
-                });
-
-                var imageId = findClosestImage(imageIds, currentImageId);
-                if (!imageId) {
-                    throw new Error('FusionRenderer: findClosestImage did not return an imageId');
-                }
-
-                cornerstone.loadAndCacheImage(imageId).then(function(image) {
-                    cornerstone.addLayer(element, image);
-                    cornerstone.updateImage(element);
-                });
-            });
-        };
-    }
-
-    cornerstoneTools.stackRenderers = {};
-    cornerstoneTools.stackRenderers.FusionRenderer = FusionRenderer;
-
-})(cornerstone, cornerstoneTools);
+        cornerstone.updateImage(element);
+      });
+    });
+  }
+}

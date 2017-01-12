@@ -1,18 +1,18 @@
 import scrollToIndex from './scrollToIndex.js';
-import { getToolState } from '../stateManagement/toolState.js';
+import { getStackData } from '../stacks/displayStack.js';
 
 export default function (element, images) {
-  const toolData = getToolState(element, 'stack');
+  const stackData = getStackData(element);
 
-  if (!toolData || !toolData.data || !toolData.data.length) {
+  if (!stackData) {
     return;
   }
 
-  const stackData = toolData.data[0];
+  const baseImageObject = stackData.stack.imageObjects[0];
+  const numImages = baseImageObject.images.length;
+  let newImageIdIndex = stackData.renderer.currentImageIdIndex + images;
 
-  let newImageIdIndex = stackData.currentImageIdIndex + images;
-
-  newImageIdIndex = Math.min(stackData.imageIds.length - 1, newImageIdIndex);
+  newImageIdIndex = Math.min(numImages - 1, newImageIdIndex);
   newImageIdIndex = Math.max(0, newImageIdIndex);
 
   scrollToIndex(element, newImageIdIndex);

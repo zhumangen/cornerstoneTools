@@ -148,4 +148,9 @@ export { zoom,
          zoomTouchPinch,
          zoomTouchDrag } from './imageTools/zoom';
 
+export { stackRenderers } from './stacks/stackRenderers.js';
+export { displayStack } from './stacks/displayStack.js';
+export { Stack } from './stacks/stack.js';
+export { ImageObject } from './stacks/imageObject.js';
+
 export { default as version } from './version';

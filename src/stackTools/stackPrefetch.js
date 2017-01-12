@@ -229,12 +229,12 @@ function onImageUpdated (e) {
 }
 
 function enable (element) {
-    // Clear old prefetch data. Skipping this can cause problems when changing the series inside an element
+  // Clear old prefetch data. Skipping this can cause problems when changing the series inside an element
   const stackPrefetchDataArray = getToolState(element, toolType);
 
   stackPrefetchDataArray.data = [];
 
-    // First check that there is stack data available
+  // First check that there is stack data available
   const stackData = getToolState(element, 'stack');
 
   if (!stackData || !stackData.data || !stackData.data.length) {

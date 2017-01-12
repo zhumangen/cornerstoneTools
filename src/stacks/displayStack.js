@@ -1,33 +1,38 @@
-(function(cornerstone, cornerstoneTools) {
+const stackData = {};
 
-    'use strict';
+/**
+ * Displays a Stack
+ *
+ * @param element Enabled Cornerstone element
+ * @param stack Instance of the Stack class
+ */
+export function displayStack (element, stack, renderer) {
+  if (!element) {
+    throw new Error('displayStack: No element provided');
+  }
 
-    /**
-     * Displays a Stack
-     *
-     * @param element Enabled Cornerstone element
-     * @param stack Instance of the Stack class
-     */
-    function displayStack(element, stack, renderer) {
-        if (!element) {
-            throw 'displayStack: No element provided';
-        }
+  if (!stack) {
+    throw new Error('displayStack: No stack provided');
+  }
 
-        if (!stack) {
-            throw 'displayStack: No stack provided';
-        }
+  if (!renderer || !renderer.render) {
+    throw new Error('displayStack: No renderer provided');
+  }
 
-        if (!renderer || !renderer.render) {
-            throw 'displayStack: No renderer provided';
-        }
+  renderer.render(element, stack);
 
-        if (!stack.imageObjects) {
-            throw 'displayStack: Stack has no Image Objects to render';
-        }
+  stackData[element] = {
+    stack,
+    renderer
+  };
+}
 
-        renderer.render(element, stack.imageObjects);
-    }
-
-    cornerstoneTools.displayStack = displayStack;
-
-})(cornerstone, cornerstoneTools);
+/**
+ * Displays a Stack
+ *
+ * @param element Enabled Cornerstone element
+ * @param stack Instance of the Stack class
+ */
+export function getStackData (element) {
+  return stackData[element];
+}
