@@ -19,7 +19,7 @@
         pageDistanceMoved,
         preventNextPinch = false,
         lastDelta;
-    
+
     function onTouch(e) {
         console.log(e.type);
         var element = e.target.parentNode,
@@ -275,7 +275,7 @@
                     x: e.deltaX - lastDelta.x,
                     y: e.deltaY - lastDelta.y
                 };
-                
+
                 lastDelta = {
                     x: e.deltaX,
                     y: e.deltaY
