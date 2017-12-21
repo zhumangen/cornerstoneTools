@@ -1,5 +1,5 @@
 import external from '../externalModules.js';
-import mouseButtonTool from './mouseButtonTool.js';
+import aiTool from './aiTool.js';
 import touchTool from './touchTool.js';
 import toolStyle from '../stateManagement/toolStyle.js';
 import toolColors from '../stateManagement/toolColors.js';
@@ -11,27 +11,27 @@ import calculateEllipseStatistics from '../util/calculateEllipseStatistics.js';
 import calculateSUV from '../util/calculateSUV.js';
 import { getToolState } from '../stateManagement/toolState.js';
 
-const toolType = 'ellipticalRoi';
+const toolType = 'ellipticalAi';
 
 // /////// BEGIN ACTIVE TOOL ///////
-function createNewMeasurement (mouseEventData) {
-  // Create the measurement data for this tool with the end handle activated
+function createNewMeasurement (aiData) {
+  
   const measurementData = {
     visible: true,
     active: true,
     invalidated: true,
     handles: {
       start: {
-        x: mouseEventData.currentPoints.image.x,
-        y: mouseEventData.currentPoints.image.y,
-        highlight: true,
+        x: aiData.data.x0,
+        y: aiData.data.y0,
+        highlight: false,
         active: false
       },
       end: {
-        x: mouseEventData.currentPoints.image.x,
-        y: mouseEventData.currentPoints.image.y,
-        highlight: true,
-        active: true
+        x: aiData.data.x1,
+        y: aiData.data.y1,
+        highlight: false,
+        active: false
       },
       textBox: {
         active: false,
@@ -39,7 +39,8 @@ function createNewMeasurement (mouseEventData) {
         movesIndependently: false,
         drawnIndependently: true,
         allowedOutsideImage: true,
-        hasBoundingBox: true
+        hasBoundingBox: true,
+        aiType:aiData.data.type,
       }
     }
   };
@@ -95,7 +96,7 @@ function numberWithCommas (x) {
   return parts.join('.');
 }
 
-function onImageRendered (e, eventData) {
+function onImageRendered (e, eventData, aiData) {
   // If we have no toolData for this element, return immediately as there is nothing to do
   const toolData = getToolState(e.currentTarget, toolType);
 
@@ -107,7 +108,7 @@ function onImageRendered (e, eventData) {
   const image = eventData.image;
   const element = eventData.element;
   const lineWidth = toolStyle.getToolWidth();
-  const config = ellipticalRoi.getConfiguration();
+  const config = ellipticalAi.getConfiguration();
   const context = eventData.canvasContext.canvas.getContext('2d');
   const seriesModule = cornerstone.metaData.get('generalSeriesModule', image.imageId);
   let modality;
@@ -140,7 +141,7 @@ function onImageRendered (e, eventData) {
 
     // Retrieve the bounds of the ellipse (left, top, width, and height)
     // In Canvas coordinates
-    const leftCanvas = (handleStartCanvas.x, handleEndCanvas.x);
+    const leftCanvas = Math.min(handleStartCanvas.x, handleEndCanvas.x);
     const topCanvas = Math.min(handleStartCanvas.y, handleEndCanvas.y);
     const widthCanvas = Math.abs(handleStartCanvas.x - handleEndCanvas.x);
     const heightCanvas = Math.abs(handleStartCanvas.y - handleEndCanvas.y);
@@ -173,123 +174,126 @@ function onImageRendered (e, eventData) {
     }
 
     // Define variables for the area and mean/standard deviation
-    let area,
-      meanStdDev,
-      meanStdDevSUV;
+    // let area,
+    //   meanStdDev,
+    //   meanStdDevSUV;
 
     // Perform a check to see if the tool has been invalidated. This is to prevent
     // Unnecessary re-calculation of the area, mean, and standard deviation if the
     // Image is re-rendered but the tool has not moved (e.g. during a zoom)
-    if (data.invalidated === false) {
-      // If the data is not invalidated, retrieve it from the toolData
-      meanStdDev = data.meanStdDev;
-      meanStdDevSUV = data.meanStdDevSUV;
-      area = data.area;
-    } else {
-      // If the data has been invalidated, we need to calculate it again
+    // if (data.invalidated === false) {
+    //   // If the data is not invalidated, retrieve it from the toolData
+    //   meanStdDev = data.meanStdDev;
+    //   meanStdDevSUV = data.meanStdDevSUV;
+    //   area = data.area;
+    // } else {
+    //   // If the data has been invalidated, we need to calculate it again
 
-      // Retrieve the bounds of the ellipse in image coordinates
-      const ellipse = {
-        left: Math.round(Math.min(data.handles.start.x, data.handles.end.x)),
-        top: Math.round(Math.min(data.handles.start.y, data.handles.end.y)),
-        width: Math.round(Math.abs(data.handles.start.x - data.handles.end.x)),
-        height: Math.round(Math.abs(data.handles.start.y - data.handles.end.y))
-      };
+    //   // Retrieve the bounds of the ellipse in image coordinates
+    //   const ellipse = {
+    //     left: Math.round(Math.min(data.handles.start.x, data.handles.end.x)),
+    //     top: Math.round(Math.min(data.handles.start.y, data.handles.end.y)),
+    //     width: Math.round(Math.abs(data.handles.start.x - data.handles.end.x)),
+    //     height: Math.round(Math.abs(data.handles.start.y - data.handles.end.y))
+    //   };
 
-      // First, make sure this is not a color image, since no mean / standard
-      // Deviation will be calculated for color images.
-      if (!image.color) {
-        // Retrieve the array of pixels that the ellipse bounds cover
-        const pixels = cornerstone.getPixels(element, ellipse.left, ellipse.top, ellipse.width, ellipse.height);
+    //   // First, make sure this is not a color image, since no mean / standard
+    //   // Deviation will be calculated for color images.
+    //   if (!image.color) {
+    //     // Retrieve the array of pixels that the ellipse bounds cover
+    //     const pixels = cornerstone.getPixels(element, ellipse.left, ellipse.top, ellipse.width, ellipse.height);
 
-        // Calculate the mean & standard deviation from the pixels and the ellipse details
-        meanStdDev = calculateEllipseStatistics(pixels, ellipse);
+    //     // Calculate the mean & standard deviation from the pixels and the ellipse details
+    //     meanStdDev = calculateEllipseStatistics(pixels, ellipse);
 
-        if (modality === 'PT') {
-          // If the image is from a PET scan, use the DICOM tags to
-          // Calculate the SUV from the mean and standard deviation.
+    //     if (modality === 'PT') {
+    //       // If the image is from a PET scan, use the DICOM tags to
+    //       // Calculate the SUV from the mean and standard deviation.
 
-          // Note that because we are using modality pixel values from getPixels, and
-          // The calculateSUV routine also rescales to modality pixel values, we are first
-          // Returning the values to storedPixel values before calcuating SUV with them.
-          // TODO: Clean this up? Should we add an option to not scale in calculateSUV?
-          meanStdDevSUV = {
-            mean: calculateSUV(image, (meanStdDev.mean - image.intercept) / image.slope),
-            stdDev: calculateSUV(image, (meanStdDev.stdDev - image.intercept) / image.slope)
-          };
-        }
+    //       // Note that because we are using modality pixel values from getPixels, and
+    //       // The calculateSUV routine also rescales to modality pixel values, we are first
+    //       // Returning the values to storedPixel values before calcuating SUV with them.
+    //       // TODO: Clean this up? Should we add an option to not scale in calculateSUV?
+    //       meanStdDevSUV = {
+    //         mean: calculateSUV(image, (meanStdDev.mean - image.intercept) / image.slope),
+    //         stdDev: calculateSUV(image, (meanStdDev.stdDev - image.intercept) / image.slope)
+    //       };
+    //     }
 
-        // If the mean and standard deviation values are sane, store them for later retrieval
-        if (meanStdDev && !isNaN(meanStdDev.mean)) {
-          data.meanStdDev = meanStdDev;
-          data.meanStdDevSUV = meanStdDevSUV;
-        }
-      }
+    //     // If the mean and standard deviation values are sane, store them for later retrieval
+    //     if (meanStdDev && !isNaN(meanStdDev.mean)) {
+    //       data.meanStdDev = meanStdDev;
+    //       data.meanStdDevSUV = meanStdDevSUV;
+    //     }
+    //   }
 
-      // Retrieve the pixel spacing values, and if they are not
-      // Real non-zero values, set them to 1
-      const columnPixelSpacing = image.columnPixelSpacing || 1;
-      const rowPixelSpacing = image.rowPixelSpacing || 1;
+    //   // Retrieve the pixel spacing values, and if they are not
+    //   // Real non-zero values, set them to 1
+    //   const columnPixelSpacing = image.columnPixelSpacing || 1;
+    //   const rowPixelSpacing = image.rowPixelSpacing || 1;
 
-      // Calculate the image area from the ellipse dimensions and pixel spacing
-      area = Math.PI * (ellipse.width * columnPixelSpacing / 2) * (ellipse.height * rowPixelSpacing / 2);
+    //   // Calculate the image area from the ellipse dimensions and pixel spacing
+    //   area = Math.PI * (ellipse.width * columnPixelSpacing / 2) * (ellipse.height * rowPixelSpacing / 2);
 
-      // If the area value is sane, store it for later retrieval
-      if (!isNaN(area)) {
-        data.area = area;
-      }
+    //   // If the area value is sane, store it for later retrieval
+    //   if (!isNaN(area)) {
+    //     data.area = area;
+    //   }
 
-      // Set the invalidated flag to false so that this data won't automatically be recalculated
-      data.invalidated = false;
-    }
+    //   // Set the invalidated flag to false so that this data won't automatically be recalculated
+    //   data.invalidated = false;
+    // }
 
     // Define an array to store the rows of text for the textbox
     const textLines = [];
 
     // If the mean and standard deviation values are present, display them
-    if (meanStdDev && meanStdDev.mean !== undefined) {
-      // If the modality is CT, add HU to denote Hounsfield Units
-      let moSuffix = '';
+    // if (meanStdDev && meanStdDev.mean !== undefined) {
+    //   // If the modality is CT, add HU to denote Hounsfield Units
+    //   let moSuffix = '';
 
-      if (modality === 'CT') {
-        moSuffix = ' HU';
-      }
+    //   if (modality === 'CT') {
+    //     moSuffix = ' HU';
+    //   }
 
-      // Create a line of text to display the mean and any units that were specified (i.e. HU)
-      let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
-      // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
-      let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
+    //   // Create a line of text to display the mean and any units that were specified (i.e. HU)
+    //   let meanText = `Mean: ${numberWithCommas(meanStdDev.mean.toFixed(2))}${moSuffix}`;
+    //   // Create a line of text to display the standard deviation and any units that were specified (i.e. HU)
+    //   let stdDevText = `StdDev: ${numberWithCommas(meanStdDev.stdDev.toFixed(2))}${moSuffix}`;
 
-      // If this image has SUV values to display, concatenate them to the text line
-      if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
-        const SUVtext = ' SUV: ';
+    //   // If this image has SUV values to display, concatenate them to the text line
+    //   if (meanStdDevSUV && meanStdDevSUV.mean !== undefined) {
+    //     const SUVtext = ' SUV: ';
 
-        meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
-        stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
-      }
+    //     meanText += SUVtext + numberWithCommas(meanStdDevSUV.mean.toFixed(2));
+    //     stdDevText += SUVtext + numberWithCommas(meanStdDevSUV.stdDev.toFixed(2));
+    //   }
 
-      // Add these text lines to the array to be displayed in the textbox
-      textLines.push(meanText);
-      textLines.push(stdDevText);
-    }
+    //   // Add these text lines to the array to be displayed in the textbox
+    //   textLines.push(meanText);
+    //   textLines.push(stdDevText);
+    // }
 
     // If the area is a sane value, display it
-    if (area) {
-      // Determine the area suffix based on the pixel spacing in the image.
-      // If pixel spacing is present, use millimeters. Otherwise, use pixels.
-      // This uses Char code 178 for a superscript 2
-      let suffix = ` mm${String.fromCharCode(178)}`;
+    // if (area) {
+    //   // Determine the area suffix based on the pixel spacing in the image.
+    //   // If pixel spacing is present, use millimeters. Otherwise, use pixels.
+    //   // This uses Char code 178 for a superscript 2
+    //   let suffix = ` mm${String.fromCharCode(178)}`;
 
-      if (!image.rowPixelSpacing || !image.columnPixelSpacing) {
-        suffix = ` pixels${String.fromCharCode(178)}`;
-      }
+    //   if (!image.rowPixelSpacing || !image.columnPixelSpacing) {
+    //     suffix = ` pixels${String.fromCharCode(178)}`;
+    //   }
 
-      // Create a line of text to display the area and its units
-      const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
+    //   Create a line of text to display the area and its units
+    //   const areaText = `Area: ${numberWithCommas(area.toFixed(2))}${suffix}`;
 
-      // Add this text line to the array to be displayed in the textbox
-      textLines.push(areaText);
-    }
+    //   Add this text line to the array to be displayed in the textbox
+    //   textLines.push(areaText);
+    // }
+
+    const typeText = `Type: ${aiData.data.type}`;
+    textLines.push(typeText);
 
     // If the textbox has not been moved by the user, it should be displayed on the right-most
     // Side of the tool.
@@ -396,18 +400,18 @@ function onImageRendered (e, eventData) {
 // /////// END IMAGE RENDERING ///////
 
 // Module exports
-const ellipticalRoi = mouseButtonTool({
+const ellipticalAi = aiTool({
   createNewMeasurement,
   onImageRendered,
   pointNearTool,
   toolType
 });
 
-const ellipticalRoiTouch = touchTool({
+const ellipticalAiTouch = touchTool({
   createNewMeasurement,
   onImageRendered,
   pointNearTool: pointNearToolTouch,
   toolType
 });
 
-export { ellipticalRoi, ellipticalRoiTouch };
+export { ellipticalAi, ellipticalAiTouch };
