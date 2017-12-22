@@ -140,7 +140,7 @@ function onImageRendered (e, eventData) {
 
     // Retrieve the bounds of the ellipse (left, top, width, and height)
     // In Canvas coordinates
-    const leftCanvas = (handleStartCanvas.x, handleEndCanvas.x);
+    const leftCanvas = Math.min(handleStartCanvas.x, handleEndCanvas.x);
     const topCanvas = Math.min(handleStartCanvas.y, handleEndCanvas.y);
     const widthCanvas = Math.abs(handleStartCanvas.x - handleEndCanvas.x);
     const heightCanvas = Math.abs(handleStartCanvas.y - handleEndCanvas.y);
