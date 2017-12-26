@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 1.1.2 - 2017-12-22 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 1.1.2 - 2017-12-26 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -310,7 +310,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var defaultColor = 'white',
     activeColor = 'greenyellow',
-    fillColor = 'transparent';
+    fillColor = 'transparent',
+    aiColor = 'red';
 
 function setFillColor(color) {
   fillColor = color;
@@ -340,6 +341,18 @@ function getColorIfActive(active) {
   return active ? activeColor : defaultColor;
 }
 
+function setActiveAiColor(color) {
+  aiColor = color;
+}
+
+function getActiveAiColor() {
+  return aiColor;
+}
+
+function getAiColorIfActive(active) {
+  return active ? aiColor : defaultColor;
+}
+
 var toolColors = {
   setFillColor: setFillColor,
   getFillColor: getFillColor,
@@ -347,7 +360,10 @@ var toolColors = {
   getToolColor: getToolColor,
   setActiveColor: setActiveColor,
   getActiveColor: getActiveColor,
-  getColorIfActive: getColorIfActive
+  getColorIfActive: getColorIfActive,
+  setActiveAiColor: setActiveAiColor,
+  getActiveAiColor: getActiveAiColor,
+  getAiColorIfActive: getAiColorIfActive
 };
 
 exports.default = toolColors;
@@ -15560,7 +15576,7 @@ function createNewMeasurement(aiData) {
 
   var measurementData = {
     visible: true,
-    active: true,
+    active: false,
     invalidated: true,
     handles: {
       start: {
@@ -15660,7 +15676,7 @@ function onImageRendered(e, eventData) {
     }
 
     // Check which color the rendered tool should be
-    var color = _toolColors2.default.getColorIfActive(data.active);
+    var color = _toolColors2.default.getAiColorIfActive(data.active);
 
     // Convert Image coordinates to Canvas coordinates given the element
     var handleStartCanvas = cornerstone.pixelToCanvas(element, data.handles.start);
