@@ -1,7 +1,8 @@
 
 let defaultColor = 'white',
   activeColor = 'greenyellow',
-  fillColor = 'transparent';
+  fillColor = 'transparent',
+  aiColor = 'red';
 
 function setFillColor (color) {
   fillColor = color;
@@ -31,6 +32,18 @@ function getColorIfActive (active) {
   return active ? activeColor : defaultColor;
 }
 
+function setActiveAiColor (color) {
+  aiColor = color;
+}
+
+function getActiveAiColor () {
+  return aiColor;
+}
+
+function getAiColorIfActive (active) {
+  return active ? aiColor : defaultColor;
+}
+
 const toolColors = {
   setFillColor,
   getFillColor,
@@ -38,7 +51,10 @@ const toolColors = {
   getToolColor,
   setActiveColor,
   getActiveColor,
-  getColorIfActive
+  getColorIfActive,
+  setActiveAiColor,
+  getActiveAiColor,
+  getAiColorIfActive
 };
 
 export default toolColors;
