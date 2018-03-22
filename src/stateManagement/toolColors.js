@@ -1,6 +1,6 @@
 
-let defaultColor = 'greenyellow',
-  activeColor = 'yellow',
+let defaultColor = '#55e300',
+  activeColor = '#ffde00',
   fillColor = 'transparent',
   aiColor = 'red';
 
