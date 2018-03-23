@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes"/>
 
     <!-- twitter bootstrap CSS stylesheet - not required by cornerstoneTools -->
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="../cornerstone.min.css" rel="stylesheet">
 
@@ -58,10 +58,6 @@
     </div>
 </body>
 
-<!-- jquery - included to make things easier to demo, not needed or used by the cornerstone library but
-is used by our example image loader-->
-<script src="../jquery.min.js"></script>
-
 <!-- include the hammer.fakemultitouch so we can test with a mouse -->
 <script src="../touch-emulator.js"></script>
 <script> TouchEmulator(); </script>
@@ -75,18 +71,19 @@ is used by our example image loader-->
 
 <!-- include the cornerstone tools library -->
 <script src="../../dist/cornerstoneTools.js"></script>
+<script>window.cornerstoneTools || document.write('<script src="https://unpkg.com/cornerstone-tools">\x3C/script>')</script>
 
 <!-- include special code for these examples which provides images -->
 <script src="../exampleImageLoader.js"></script>
 
 <script>
-    var element = $('#dicomImage').get(0);
+    var element = document.getElementById('dicomImage');
 
     // Listen for changes to the viewport so we can update the text overlays in the corner
     function onImageRendered(e) {
         var viewport = cornerstone.getViewport(e.target);
-        $('#mrbottomleft').text("WW/WC: " + Math.round(viewport.voi.windowWidth) + "/" + Math.round(viewport.voi.windowCenter));
-        $('#mrbottomright').text("Zoom: " + viewport.scale.toFixed(2));
+        document.getElementById('mrbottomleft').textContent = "WW/WC: " + Math.round(viewport.voi.windowWidth) + "/" + Math.round(viewport.voi.windowCenter);
+        document.getElementById('mrbottomright').textContent = "Zoom: " + viewport.scale.toFixed(2);
     };
 
     element.addEventListener('cornerstoneimagerendered', onImageRendered);
@@ -98,7 +95,7 @@ is used by our example image loader-->
     cornerstoneTools.touchInput.enable(element);
     cornerstone.loadImage(imageId).then(function(image) {
         cornerstone.displayImage(element, image);
-       
+
         // Enable all tools we want to use with this element
         cornerstoneTools.wwwcTouchDrag.activate(element);
         cornerstoneTools.zoomTouchPinch.activate(element);

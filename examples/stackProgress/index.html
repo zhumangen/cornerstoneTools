@@ -44,22 +44,19 @@
 
 </body>
 
-<!-- jquery - included to make things easier to demo, not needed or used by the cornerstone library but
-is used by our example image loader-->
-<script src="../jquery.min.js"></script>
-
 <!-- include the cornerstone library -->
 <script src="../cornerstone.min.js"></script>
 <script src="../cornerstoneMath.min.js"></script>
 
 <!-- include the cornerstone tools library -->
 <script src="../../dist/cornerstoneTools.js"></script>
+<script>window.cornerstoneTools || document.write('<script src="https://unpkg.com/cornerstone-tools">\x3C/script>')</script>
 
 <!-- include special code for these examples which provides images -->
 <script src="../exampleImageLoader.js"></script>
 
 <script>
-    var element = $('#dicomImage').get(0);
+    var element = document.getElementById('dicomImage');
 
     var imageIds = [
         'example://1',

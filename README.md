@@ -170,14 +170,18 @@ Getting Started
 
 **Via NPM:** (preferred)
 
-`npm install --save cornerstone-tools`
+_Latest stable release:_
+- `npm install --save cornerstone-tools`
 
+_Pre-release, unstable, mostly for contributors:_
+- `npm install --save cornerstone-tools@next`
 
 **Get a packaged source file:**
 
 [UNPKG](https://unpkg.com/#/) offers a quick/neat solution for grabbing versioned copies of the source. For example:
 
 `https://unpkg.com/<package-name>@<package-version>/path/to/desired-file.js`
+
 
 * For development, to get the latest minified source:
     * `<script src="https://unpkg.com/cornerstone-tools"></script>`
@@ -194,15 +198,12 @@ See the [live examples](https://rawgithub.com/cornerstonejs/cornerstoneTools/mas
 
 ````javascript
 // Load NPM packages
-import $ from 'jquery';                           // npm install --save jquery
 import Hammer from 'hammerjs';                    // npm install --save hammerjs
 import * as cornerstone from 'cornerstone-core';  // npm install --save cornerstone-core
 import * as cornerstoneTools from 'cornerstone-tools';
 
 // Specify external dependencies
-cornerstone.external.$ = $;
 cornerstoneTools.external.cornerstone = cornerstone;
-cornerstoneTools.external.$ = $;
 cornerstoneTools.external.Hammer = Hammer;
 ````
 
@@ -213,14 +214,12 @@ cornerstoneTools.external.Hammer = Hammer;
 
 ````javascript
 // Load Packaged Sources
-<script src="https://unpkg.com/jquery@3.2.1/dist/jquery.js"></script>
 <script src="https://unpkg.com/hammerjs@2.0.8/hammer.js"></script>
-<script src="https://unpkg.com/cornerstone-core@1.1.0/dist/cornerstone.min.js"></script>
-<script src="https://unpkg.com/cornerstone-tools@1.0.2/dist/cornerstoneTools.min.js"></script>
+<script src="https://unpkg.com/cornerstone-core@2.0.0/dist/cornerstone.min.js"></script>
+<script src="https://unpkg.com/cornerstone-tools@2.0.0/dist/cornerstoneTools.min.js"></script>
 
 // Specify external dependencies
 cornerstoneTools.external.cornerstone = cornerstone;
-cornerstoneTools.external.$ = $;
 cornerstoneTools.external.Hammer = Hammer;
 ````
 

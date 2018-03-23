@@ -5,7 +5,7 @@
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
     <!-- twitter bootstrap CSS stylesheet - not required by cornerstoneTools -->
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="../cornerstone.min.css" rel="stylesheet">
 
@@ -29,7 +29,7 @@
 
     <div class="row">
         <div class="col-xs-6">
-            <div class="errorDescription"></div>
+            <div id="errorDescription"></div>
             <div style="width:512px;height:512px;position:relative;display:inline-block;color:white;"
                  oncontextmenu="return false"
                  class='cornerstone-enabled-image'
@@ -46,44 +46,37 @@
 
 </body>
 
-<!-- jquery - included to make things easier to demo, not needed or used by the cornerstone library but
-is used by our example image loader-->
-<script src="../jquery.min.js"></script>
-
 <!-- include the cornerstone library -->
 <script src="../cornerstone.min.js"></script>
 <script src="../cornerstoneMath.min.js"></script>
 
-<script src="../cornerstoneWADOImageLoader.js"></script>
-
 <!-- include the cornerstone tools library -->
 <script src="../../dist/cornerstoneTools.js"></script>
+<script>window.cornerstoneTools || document.write('<script src="https://unpkg.com/cornerstone-tools">\x3C/script>')</script>
 
 <!-- include special code for these examples which provides images -->
 <script src="../exampleImageLoader.js"></script>
 
 <script>
-    var element = $('#dicomImage').get(0);
+    var element = document.getElementById('dicomImage');
 
     function errorLoadingHandler(element, image) {
-        var elem = $(element);
-        elem.addClass("error");
-        $('.errorDescription').text("Error occurred! " + imageId + " not loaded.");
+        element.classList.add("error");
+        document.getElementById('errorDescription').textContent = "Error occurred! " + imageId + " not loaded.";
         cornerstoneTools.mouseInput.disable(element);
         cornerstone.disable(element);
     };
 
     cornerstoneTools.loadHandlerManager.setErrorLoadingHandler(errorLoadingHandler);
 
-    var imageId = 'dicomweb://awdawwad1001';
+    var imageId = 'example://failingImage';
 
     // image enable the dicomImage element
     cornerstone.enable(element);
-    cornerstoneTools.mouseInput.enable(element);
 
     cornerstone.loadImage(imageId).then(function(image) {
         cornerstone.displayImage(element, image);
-    }, function(image) {
+    }, function() {
         var errorLoadingHandler = cornerstoneTools.loadHandlerManager.getErrorLoadingHandler();
         errorLoadingHandler(element, imageId);
     });
